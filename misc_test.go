@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
@@ -81,5 +82,21 @@ func TestParseResponseInvalidToken(t *testing.T) {
 		t.Errorf("Unexpected error: %s", err)
 	} else if responsePartial.Error != "invalid_auth" {
 		t.Errorf("got %v; want %v", responsePartial.Error, "invalid_auth")
+	}
+}
+
+func TestIntOrString(t *testing.T) {
+	type TestStruct struct {
+		S IntOrString
+		I IntOrString
+	}
+	b := []byte(`{ "s": "foo", "i": 100 }`)
+	ret := TestStruct{}
+	json.Unmarshal(b, &ret)
+	if ret.S.StrVal != "foo" {
+		t.Errorf("cannot unmarshal....\n%v", ret)
+	}
+	if ret.I.IntVal != int64(100) {
+		t.Errorf("cannot unmarshal....\n%v", ret)
 	}
 }

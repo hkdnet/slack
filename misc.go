@@ -117,3 +117,35 @@ func parseAdminResponse(method string, teamName string, values url.Values, intf 
 	endpoint := fmt.Sprintf(SLACK_WEB_API_FORMAT, teamName, method, time.Now().Unix())
 	return postForm(endpoint, values, intf, debug)
 }
+
+// IntOrString represetns a value whose type is string or int.
+// Sometimes slack api response is type ambiguous...
+type IntOrString struct {
+	Kind   IntstrKind
+	IntVal int64
+	StrVal string
+}
+
+// IntstrKind represents the stored type of IntOrString.
+type IntstrKind int
+
+const (
+	IntstrInt    IntstrKind = iota // The IntOrString holds an int.
+	IntstrString                   // The IntOrString holds a string.
+)
+
+func (id *IntOrString) UnmarshalJSON(b []byte) error {
+	var i int64
+	if err := json.Unmarshal(b, &i); err == nil {
+		id.Kind = IntstrInt
+		id.IntVal = i
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		id.Kind = IntstrString
+		id.StrVal = s
+		return nil
+	}
+	return errors.New(`cannot convert string or nil`)
+}
